@@ -51,6 +51,7 @@ const Dashboard = () => {
     totalApplications: 0,
     recentApplications: 0
   });
+  const [hasCompanyProfile, setHasCompanyProfile] = useState(false); // Track if the employer has a company profile
 
   useEffect(() => {
     if (!user) {
@@ -61,6 +62,7 @@ const Dashboard = () => {
     if (user.role === 'employer') {
       fetchEmployerJobs();
       fetchEmployerAnalytics();
+      checkCompanyProfile(); // Check if the employer has a company profile
     } else if (user.role === 'job_seeker') {
       fetchJobSeekerApplications();
     }
@@ -69,15 +71,34 @@ const Dashboard = () => {
   const fetchEmployerJobs = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('Token is missing');
+        return;
+      }
       const response = await axios.get(
         'http://localhost:5000/api/jobs/company/listings',
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setJobs(response.data);
     } catch (error) {
       console.error('Error fetching jobs:', error);
+    }
+  };
+
+  const checkCompanyProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        'http://localhost:5000/api/company',
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHasCompanyProfile(!!response.data); // Set to true if the employer has a company profile
+    } catch (error) {
+      if (error.response?.status === 404) {
+        setHasCompanyProfile(false); // No company profile found
+      } else {
+        console.error('Error checking company profile:', error);
+      }
     }
   };
 
@@ -252,13 +273,24 @@ const Dashboard = () => {
         <Typography variant="h4" component="h1">
           Employer Dashboard
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/jobs/new')}
-        >
-          Post New Job
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {!hasCompanyProfile && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => navigate('/company-profile')}
+            >
+              Create Company Profile
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/jobs/new')}
+          >
+            Post New Job
+          </Button>
+        </Box>
       </Box>
 
       <AnalyticsCards />
@@ -428,4 +460,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
