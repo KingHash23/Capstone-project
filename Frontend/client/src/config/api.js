@@ -29,7 +29,8 @@ const API_ENDPOINTS = {
   ANALYTICS: `${API_BASE_URL}/analytics`,
   
   // Employer endpoints
-  COMPANY_PROFILE: `${API_BASE_URL}/employer/company`,
+  COMPANY_PROFILE: `${API_BASE_URL}/employers/company`,
+  COMPANY_BY_ID: (id) => `${API_BASE_URL}/employers/company/${id}`,
 };
 
 export { API_BASE_URL, API_ENDPOINTS };
