@@ -43,27 +43,32 @@ router.get('/:id', async (req, res) => {
 // Create new job posting (employers only)
 router.post('/', auth, checkRole(['employer']), async (req, res) => {
   try {
+    // Check if the employer has a company profile
     const company = await Company.findByEmployerId(req.user.id);
     if (!company) {
       return res.status(400).json({ message: 'Please create a company profile first' });
     }
 
+    // Create a new job posting
+    const { title, description, requirements, salaryRange, location, jobType, experienceLevel, skills, minSalary, maxSalary } = req.body;
+
     const jobData = {
       companyId: company.id,
-      title: req.body.title,
-      description: req.body.description,
-      requirements: req.body.requirements,
-      salaryRange: req.body.salaryRange,
-      location: req.body.location,
-      jobType: req.body.jobType,
-      experienceLevel: req.body.experienceLevel,
-      skills: Array.isArray(req.body.skills) ? req.body.skills.join(',') : req.body.skills,
-      minSalary: req.body.minSalary,
-      maxSalary: req.body.maxSalary
+      title,
+      description,
+      requirements,
+      salaryRange,
+      location,
+      jobType,
+      experienceLevel,
+      skills: skills ? skills.join(',') : '', // Ensure skills are stored as a comma-separated string
+      minSalary,
+      maxSalary
     };
 
     const job = await Job.create(jobData);
-    res.status(201).json(job);
+
+    res.status(201).json(job);  // Respond with the created job
   } catch (error) {
     console.error('Error creating job:', error);
     res.status(500).json({ message: 'Error creating job posting' });
