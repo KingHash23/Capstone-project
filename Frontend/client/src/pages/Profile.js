@@ -52,7 +52,7 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/job-seeker/profile', {
+      const response = await axios.get('http://localhost:5000/api/job-seekers/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const profileData = response.data;
@@ -99,7 +99,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:5000/api/pages/profile',
+        'http://localhost:5000/api/job-seekers/profile',
         {
           ...profile,
           skills: profile.skills

@@ -13,6 +13,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -22,13 +23,26 @@ const CompanyProfile = () => {
   const { user } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     companyName: '',
     description: '',
     industry: '',
     website: '',
-    location: ''
+    location: '',
   });
+  const [hasProfile, setHasProfile] = useState(false); // Track if the employer has a profile
+
+  const industries = [
+    'Technology',
+    'Healthcare',
+    'Finance',
+    'Education',
+    'Manufacturing',
+    'Retail',
+    'Services',
+    'Other',
+  ];
 
   useEffect(() => {
     if (!user) {
@@ -47,13 +61,24 @@ const CompanyProfile = () => {
   const fetchCompanyProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/employer/company', {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.get('http://localhost:5000/api/company', {
+        headers: { Authorization: `Bearer ${token}` },
       });
       setProfile(response.data);
+      setHasProfile(true); // Employer already has a profile
     } catch (error) {
-      if (error.response?.status !== 404) {
-        setError('Error fetching company profile');
+      if (error.response?.status === 404) {
+        // No company profile found, initialize empty profile
+        setProfile({
+          companyName: '',
+          description: '',
+          industry: '',
+          website: '',
+          location: '',
+        });
+        setHasProfile(false); // Employer does not have a profile
+      } else {
+        setError('Error fetching company profile. Please try again later.');
       }
     }
   };
@@ -61,40 +86,68 @@ const CompanyProfile = () => {
   const handleChange = (e) => {
     setProfile({
       ...profile,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
+  };
+
+  const validateForm = () => {
+    if (!profile.companyName || !profile.description || !profile.industry || !profile.location) {
+      setError('Please fill out all required fields.');
+      return false;
+    }
+
+    if (profile.website && !profile.website.startsWith('http://') && !profile.website.startsWith('https://')) {
+      setError('Website URL must start with http:// or https://.');
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
+  
+    if (!validateForm()) {
+      return;
+    }
+  
+    setLoading(true);
+  
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
-        'http://localhost:5000/api/employer/company',
-        profile,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+      const url = 'http://localhost:5000/api/company';
+      const method = hasProfile ? 'put' : 'post'; // Use PUT if profile exists, POST otherwise
+  
+      // Make the API request
+      await axios[method](url, profile, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      // Set success message
+      setSuccess(
+        hasProfile
+          ? 'Company profile updated successfully.'
+          : 'Company profile created successfully.'
       );
-      setSuccess('Company profile updated successfully');
+  
+      // Redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
     } catch (error) {
-      setError(error.response?.data?.message || 'Error updating company profile');
+      if (error.response) {
+        setError(error.response.data.message || 'Error saving company profile.');
+      } else if (error.request) {
+        setError('No response from the server. Please try again later.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
-
-  const industries = [
-    'Technology',
-    'Healthcare',
-    'Finance',
-    'Education',
-    'Manufacturing',
-    'Retail',
-    'Services',
-    'Other'
-  ];
 
   return (
     <Container component="main" maxWidth="md">
@@ -138,14 +191,13 @@ const CompanyProfile = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
+                <FormControl fullWidth required>
                   <InputLabel>Industry</InputLabel>
                   <Select
                     name="industry"
                     value={profile.industry}
                     label="Industry"
                     onChange={handleChange}
-                    required
                   >
                     {industries.map((industry) => (
                       <MenuItem key={industry} value={industry}>
@@ -177,14 +229,23 @@ const CompanyProfile = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 2 }}
-                >
-                  Save Company Profile
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/dashboard')}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={loading}
+                    sx={{ minWidth: 120 }}
+                  >
+                    {loading ? <CircularProgress size={24} /> : 'Save Profile'}
+                  </Button>
+                </Box>
               </Grid>
             </Grid>
           </Box>
@@ -194,4 +255,4 @@ const CompanyProfile = () => {
   );
 };
 
-export default CompanyProfile; 
+export default CompanyProfile;

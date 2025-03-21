@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Container,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Alert,
+import { 
+  Container, 
+  Box, 
+  Typography, 
+  TextField, 
+  Button, 
+  Card, 
+  CardContent, 
+  Grid, 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  Alert 
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -81,11 +81,13 @@ const JobForm = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
+  
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
-
+  
+      console.log('Form Data:', formData); // Log the form data
+  
       if (id) {
         // Update existing job
         await axios.put(
@@ -96,11 +98,7 @@ const JobForm = () => {
         setSuccess('Job updated successfully');
       } else {
         // Create new job
-        await axios.post(
-          'http://localhost:5000/api/jobs',
-          formData,
-          { headers }
-        );
+        await axios.post('http://localhost:5000/api/jobs', formData, { headers });
         setSuccess('Job posted successfully');
         // Clear form after successful posting
         setFormData({
@@ -109,10 +107,15 @@ const JobForm = () => {
           requirements: '',
           salaryRange: '',
           location: '',
-          jobType: 'full_time'
+          jobType: 'full_time',
+          experienceLevel: '',
+          skills: [],
+          minSalary: '',
+          maxSalary: ''
         });
       }
     } catch (error) {
+      console.error('Error:', error.response?.data); // Log the full error
       setError(error.response?.data?.message || 'Error saving job posting');
     }
   };
@@ -241,4 +244,4 @@ const JobForm = () => {
   );
 };
 
-export default JobForm; 
+export default JobForm;
