@@ -1,5 +1,7 @@
+
 import React from 'react';
-import { Box, Container, Typography, Link } from '@mui/material';
+import { Box, Container, Typography, Link, IconButton } from '@mui/material';
+import { LinkedIn, Twitter, Instagram } from '@mui/icons-material';
 
 const Footer = () => {
   return (
@@ -15,8 +17,39 @@ const Footer = () => {
             : theme.palette.grey[800],
       }}
     >
-      <Container maxWidth="lg">
-        <Typography variant="body2" color="text.secondary" align="center">
+      <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
+        {/* Social Media Icons */}
+        <Box sx={{ mb: 2 }}>
+          <IconButton
+            href="https://www.linkedin.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="primary"
+          >
+            <LinkedIn />
+          </IconButton>
+
+          <IconButton
+            href="https://twitter.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="primary"
+          >
+            <Twitter />
+          </IconButton>
+
+          <IconButton
+            href="https://www.instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="secondary"
+          >
+            <Instagram />
+          </IconButton>
+        </Box>
+
+        {/* Copyright Text */}
+        <Typography variant="body2" color="text.secondary">
           {'Copyright © '}
           <Link color="inherit" href="/">
             Job Portal
@@ -29,4 +62,4 @@ const Footer = () => {
   );
 };
 
-export default Footer; 
+export default Footer;
