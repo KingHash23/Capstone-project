@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authAPI } from '../utils/api';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -20,7 +21,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await authAPI.login({ email, password });
+      const response = await axios.post(API_ENDPOINTS.LOGIN, {
+        email,
+        password,
+      });
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
@@ -36,7 +40,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authAPI.register(userData);
+      const response = await axios.post(API_ENDPOINTS.REGISTER, userData);
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
@@ -56,11 +60,30 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const adminLogin = async (email, password) => {
+    try {
+      const response = await axios.post(API_ENDPOINTS.ADMIN_LOGIN, {
+        email,
+        password, 
+      });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Invalid admin credentials',
+      };
+    }
+  };
+
   const value = {
     user,
-    isAuthenticated: !!user,
     login,
     register,
+    adminLogin,
     logout,
     loading,
   };
