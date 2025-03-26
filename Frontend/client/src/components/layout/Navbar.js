@@ -42,7 +42,7 @@ const Navbar = () => {
             to="/"
             sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}
           >
-            Job Portal
+            WorkFlow
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>

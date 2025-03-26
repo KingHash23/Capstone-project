@@ -22,16 +22,15 @@ import {
 import {
   Work,
   Business,
-  Person,
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   CheckCircle,
   Cancel,
-  Schedule,
   TrendingUp,
   People,
   Assessment,
+  
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -52,22 +51,7 @@ const Dashboard = () => {
     recentApplications: 0
   });
   const [hasCompanyProfile, setHasCompanyProfile] = useState(false); // Track if the employer has a company profile
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    if (user.role === 'employer') {
-      fetchEmployerJobs();
-      fetchEmployerAnalytics();
-      checkCompanyProfile(); // Check if the employer has a company profile
-    } else if (user.role === 'job_seeker') {
-      fetchJobSeekerApplications();
-    }
-  }, [user, navigate]);
-
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // State to trigger analytics refresh
   const fetchEmployerJobs = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -84,6 +68,21 @@ const Dashboard = () => {
       console.error('Error fetching jobs:', error);
     }
   };
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (user.role === 'employer') {
+      fetchEmployerJobs();
+      fetchEmployerAnalytics();
+      checkCompanyProfile(); // Check if the employer has a company profile
+    } else if (user.role === 'job_seeker') {
+      fetchJobSeekerApplications();
+    }
+  },[user, navigate, refreshTrigger]); // Added refreshTrigger to dependencies
 
   const checkCompanyProfile = async () => {
     try {
@@ -153,6 +152,8 @@ const Dashboard = () => {
         }
       );
       fetchEmployerJobs();
+      // Trigger analytics refresh after job deletion
+      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Error deleting job:', error);
     }
@@ -186,6 +187,8 @@ const Dashboard = () => {
         }
       );
       handleViewApplications(selectedJob);
+      // Trigger analytics refresh after application status update
+      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Error updating application status:', error);
     }
@@ -349,7 +352,7 @@ const Dashboard = () => {
 
       {/* Analytics Section */}
       <Box sx={{ mb: 4 }}>
-        <AnalyticsDashboard />
+        <AnalyticsDashboard refreshTrigger={refreshTrigger} />
       </Box>
 
       {/* Job Recommendations Section */}
@@ -458,6 +461,85 @@ const Dashboard = () => {
       </Dialog>
     </Container>
   );
+  // Implementation of the function that displays posted jobs from the database
+  // and allows users to apply on the jobseeker page and employers to see applications
+  const displayPostedJobs = () => {
+    // For job seekers: Display available jobs and allow them to apply
+    const displayJobsForJobSeeker = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          'http://localhost:5000/api/jobs',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+  
+        // Navigate to job details page where user can apply
+        const handleApplyForJob = (jobId) => {
+          navigate(`/jobs/${jobId}`);
+        };
+  
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+            {response.data.map((job) => (
+              <div style={{ flex: '1 1 calc(33.333% - 16px)', marginBottom: '16px' }} key={job.id}>
+                <div style={{ border: '1px solid #ccc', borderRadius: '8px' }}>
+                  <div style={{ padding: '16px' }}>
+                    <h6>{job.title}</h6>
+                    <p style={{ color: '#777' }}>
+                      <span style={{ marginRight: '8px' }}>{job.company_name}</span>
+                      <span>{job.location}</span>
+                    </p>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: '4px 8px',
+                        backgroundColor: '#e0e0e0',
+                        borderRadius: '4px',
+                        marginTop: '8px',
+                      }}
+                    >
+                      {job.job_type.split('_').join(' ').toUpperCase()}
+                    </span>
+                    <button
+                      style={{
+                        marginTop: '16px',
+                        padding: '8px 16px',
+                        backgroundColor: '#3f51b5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        width: '100%',
+                      }}
+                      onClick={() => handleApplyForJob(job.id)}
+                    >
+                      View & Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        return <div style={{ color: 'red' }}>Failed to load jobs. Please try again later.</div>;
+      }
+    };
+  
+    // For employers: Display their posted jobs and handle applications
+    const displayJobsForEmployer = () => {
+      // This functionality is already implemented in the EmployerDashboard component
+      // which displays jobs and provides buttons to view applications
+      return <EmployerDashboard />;
+    };
+  
+    // Return the appropriate component based on user role
+    return user?.role === 'employer' ? displayJobsForEmployer() : displayJobsForJobSeeker();
+  };
+  
+  // Note: The displayPostedJobs function is not directly called in this component
+  // as the functionality is already integrated into the JobSeekerDashboard and EmployerDashboard components
+
 };
 
 export default Dashboard;
