@@ -3,7 +3,7 @@ import { Grid, Card, CardContent, Typography, Box } from '@mui/material';
 import { TrendingUp, Work, People, Assessment } from '@mui/icons-material';
 import axios from 'axios';
 
-const AnalyticsDashboard = () => {
+const AnalyticsDashboard = ({ refreshTrigger }) => {
   const [analytics, setAnalytics] = useState({
     totalJobs: 0,
     activeJobs: 0,
@@ -13,7 +13,15 @@ const AnalyticsDashboard = () => {
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+    
+    // Set up polling for real-time updates (every 30 seconds)
+    const intervalId = setInterval(() => {
+      fetchAnalytics();
+    }, 30000);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [refreshTrigger]); // Re-fetch when refreshTrigger changes
 
   const fetchAnalytics = async () => {
     try {

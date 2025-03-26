@@ -11,6 +11,7 @@ const jobSeekerRoutes = require('./routes/jobSeeker');
 const jobRoutes = require('./routes/jobs');
 const employerRoutes = require('./routes/employer');
 const adminRoutes = require('./routes/admin');
+const analyticsRoutes = require('./routes/analytics');
 
 
 const app = express();
@@ -37,6 +38,7 @@ app.use('/api/job-seekers', jobSeekerRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api', employerRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Basic route
 app.get('/HELLO', (req, res) => {
